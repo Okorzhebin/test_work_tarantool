@@ -4,7 +4,7 @@ function message(str, key, value)
 		resp = {
 			status = 200,
             headers = { ['content-type'] = 'application/json' },
-            body = {['key'] =  key, ['value'] = (value)}
+            body = json.encode({['key'] =  key, ['value'] = (value)})
 
 		}
 
@@ -15,7 +15,7 @@ function message(str, key, value)
 		resp = {
 			status = 200,
             headers = { ['content-type'] = 'application/json' },
-			body = {['updated key'] =  key, ['value '] = (value)}
+			body = json.encode({['updated key'] =  key, ['value '] = (value)})
 		}
 
         log.info(resp)
@@ -25,7 +25,7 @@ function message(str, key, value)
 		resp = {
 			status = 200,
             headers = { ['content-type'] = 'application/json' },
-			body = ('deleted key:' .. key)
+			body = json.encode('deleted key:' .. key)
 		}
 
         log.info(resp)
@@ -35,7 +35,7 @@ function message(str, key, value)
 		resp = {
 			status = 409,
             headers = { ['content-type'] = 'application/json' },
-			body = ('key:' .. key.. ' exist')
+			body = json.encode('key:' .. key.. ' exist')
 		}
 
         log.info(resp)
@@ -45,7 +45,7 @@ function message(str, key, value)
 		resp = {
 			status = 400,
             headers = { ['content-type'] = 'application/json' },
-			body = ('body incorrect')
+			body = json.encode('body incorrect')
 		}
 
         log.info(resp)
@@ -55,7 +55,7 @@ function message(str, key, value)
 		resp = {
 			status = 404,
             headers = { ['content-type'] = 'application/json' },
-			body = ('no key: ' .. key)
+			body = json.encode('no key: ' .. key)
 		}
 
         log.info(resp)
@@ -85,18 +85,18 @@ function POST_req(req)
 					message('inserted', key , value)
                 
                 else
-                    msg = message('no body')
+                    resp = message('no body')
                 end 
 			else
-                msg = message('key exist', key)
+                resp = message('key exist', key)
             end
         else
 			log.info('no key')
-            --msg = message('no key')
+            --resp = message('no key')
         end
     
     
-        return msg
+        return resp
 end
 
 function PUT_req(req)
@@ -119,18 +119,18 @@ function PUT_req(req)
 					message('updated', key , value)
                 
                 else
-                    msg = message('no body')
+                    resp = message('no body')
                 end 
 			else
-                msg = message('no key', key)
+                resp = message('no key', key)
             end
         else
 			log.info('no key')
-            --msg = message('no key')
+            --resp = message('no key')
         end
     
     
-        return msg
+        return resp
 end
 function GET_req(req)
 
@@ -147,8 +147,8 @@ function GET_req(req)
                 log.info('key approved')
                 	value = box.space.tester:get{key}
                 	value = value[2]
-                   
-					msg = {
+
+                resp = {
 						status = 200,
 						headers = { ['content-type'] = 'application/json' },
 						body = json.encode({key = key, value = value})
@@ -156,15 +156,15 @@ function GET_req(req)
 
 
 			else
-                msg = message('no key', key)
+                resp = message('no key', key)
             end
         else
 			log.info('no key')
-            --msg = message('no key')
+            --resp = message('no key')
         end
     
     
-        return msg
+        return resp
 end
 
 function DELETE_req(req)
@@ -184,15 +184,15 @@ function DELETE_req(req)
                 	message('deleted', key)
 
 			else
-                msg = message('no key', key)
+                resp = message('no key', key)
             end
         else
 			log.info('no key')
-            --msg = message('no key')
+            --resp = message('no key')
         end
     
     
-        return msg
+        return resp
 end
 
 
@@ -211,7 +211,9 @@ end
     print('start http')
 
 
-    box.cfg{listen = 3301}
+    box.cfg{listen = 3301
+            log = 'server.log',
+            pid_file = 'server.pid'}
     box.schema.user.grant('guest', 'read,write,execute', 'universe')
     print('prestart tarantool')
     box.once("bootstrap", function()
